@@ -9,3 +9,10 @@ tsconfig.tsbuildinfo
 private/
 .replit
 replit.nix
+
+.blog-local.json
+.content-stage-*
+
+PREVIEW.local.md
+PRE_PUBLISH_REVIEW.local.md
+.preview-local/

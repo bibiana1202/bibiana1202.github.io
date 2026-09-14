@@ -8,8 +8,7 @@ export const sharedPageComponents: SharedLayout = {
   afterBody: [],
   footer: Component.Footer({
     links: {
-      GitHub: "https://github.com/jackyzha0/quartz",
-      "Discord Community": "https://discord.gg/cRFFHYye7t",
+
     },
   }),
 }
@@ -38,7 +37,17 @@ export const defaultContentPageLayout: PageLayout = {
         { Component: Component.ReaderMode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({
+      sortFn: (a, b) => {
+        if (a.slug === "portfolio" && b.slug !== "portfolio") return -1
+        if (b.slug === "portfolio" && a.slug !== "portfolio") return 1
+        if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1
+        return a.displayName.localeCompare(b.displayName, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      },
+    }),
   ],
   right: [
     Component.Graph(),
@@ -62,7 +71,17 @@ export const defaultListPageLayout: PageLayout = {
         { Component: Component.Darkmode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({
+      sortFn: (a, b) => {
+        if (a.slug === "portfolio" && b.slug !== "portfolio") return -1
+        if (b.slug === "portfolio" && a.slug !== "portfolio") return 1
+        if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1
+        return a.displayName.localeCompare(b.displayName, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      },
+    }),
   ],
   right: [],
 }
