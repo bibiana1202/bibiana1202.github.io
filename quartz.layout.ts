@@ -7,9 +7,7 @@ export const sharedPageComponents: SharedLayout = {
   header: [],
   afterBody: [],
   footer: Component.Footer({
-    links: {
-
-    },
+    links: {},
   }),
 }
 
@@ -39,8 +37,6 @@ export const defaultContentPageLayout: PageLayout = {
     }),
     Component.Explorer({
       sortFn: (a, b) => {
-        if (a.slug === "portfolio" && b.slug !== "portfolio") return -1
-        if (b.slug === "portfolio" && a.slug !== "portfolio") return 1
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1
         return a.displayName.localeCompare(b.displayName, undefined, {
           numeric: true,
@@ -73,8 +69,6 @@ export const defaultListPageLayout: PageLayout = {
     }),
     Component.Explorer({
       sortFn: (a, b) => {
-        if (a.slug === "portfolio" && b.slug !== "portfolio") return -1
-        if (b.slug === "portfolio" && a.slug !== "portfolio") return 1
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1
         return a.displayName.localeCompare(b.displayName, undefined, {
           numeric: true,
