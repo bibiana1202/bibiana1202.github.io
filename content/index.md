@@ -1,5 +1,5 @@
 ---
-title: "Portfolio"
+title: About Me
 date: 2026-09-14
 tags:
   - portfolio
@@ -10,13 +10,12 @@ draft: false
 
 **Backend Developer · Healthcare IT · FinTech**
 
-| **E-mail** | wew1202@naver.com |
-| --- | --- |
-| **Address** | 서울특별시 관악구 |
-| **Education** | 한국외국어대학교 컴퓨터공학과 졸업(2017.02) · 서울여자간호대학교 졸업(2022.02) |
-| **License** | 간호사 면허 취득(2022) · 대학병원 임상 근무 — VIP병동 · 간호간병통합병동 (EMR 사용) |
-| **Portfolio** | https://github.com/bibiana1202 |
-| **Core Skills** | Backend Development · Healthcare IT · Cloud Infrastructure · FinTech · Blockchain |
+- **E-mail** — [wew1202@naver.com](mailto:wew1202@naver.com)
+- **Location** — 서울특별시 관악구
+- **Education** — 한국외국어대학교 컴퓨터공학과 졸업(2017.02) · 서울여자간호대학교 졸업(2022.02)
+- **License & Clinical Experience** — 간호사 면허 취득(2022) · 대학병원 VIP병동·간호간병통합병동 근무
+- **GitHub** — [github.com/bibiana1202](https://github.com/bibiana1202)
+- **Core Skills** — Backend Development · Healthcare IT · Cloud Infrastructure · FinTech · Blockchain
 
 # About
 
@@ -29,6 +28,7 @@ draft: false
 그 경험을 들고 개발로 돌아와 병원정보시스템을 만들었습니다. **제가 쓰던 화면을 제가 만드는 일**이었습니다. 요구사항을 그대로 옮기는 대신, 왜 그 화면이 그렇게 필요한지부터 이해하고 만들 수 있었습니다.
 
 지금은 핀테크 백엔드에서 정산·블록체인·클라우드 인프라를 맡고 있습니다. 의료 기록도 돈 계산도 **틀리면 되돌리기 어려운 데이터**라는 점은 같았습니다. 어떤 도메인이든, 정확해야 하는 시스템을 **쓰는 사람을 이해하고** 만드는 개발자가 되려 합니다.
+
 
 # Experience
 
@@ -73,6 +73,8 @@ draft: false
 >         - 투석실 투석스케줄 - 예약구분 AP(00:00) / PP(00:00) 입력시 통계에 해당하는 모든 항목에 건수 포함 안되도록 요청 건
 >         - 혈액투석심화교육[개인] 회신내용 양식 디폴트화 건
 >         - 환자별 교육이수현황 화면에 출력물 출력 및 PDF출력버튼 추가 요청 건
+
+
 
 # Projects
 
@@ -193,6 +195,8 @@ draft: false
 > - **유방암 림프절 전이 예측 (DACON, public 4위 · F1 0.841)**: 병리 슬라이드 이미지와 임상항목을 함께 사용하는 멀티모달 분류 대회에 팀으로 참여했습니다.
 > - **흉부 X-ray 이상 소견 탐지 (Kaggle VinBigData)**: 14개 흉부 질환을 대상으로 객체 탐지 모델을 비교한 대회에 팀으로 참여했습니다.
 > - **GitHub**: [유방암 림프절 전이 예측 (DACON)](https://github.com/bibiana1202/public-4th-place-DACON-AI-competition-for-predicting-lymphadenopathy-of-breast-cancer) · [흉부 X-ray 탐지 (Kaggle)](https://github.com/bibiana1202/VinBigData-Chest-X-ray-Image-Detection)
+
+
 
 # Training
 
