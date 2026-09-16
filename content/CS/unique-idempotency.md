@@ -16,7 +16,6 @@ draft: false
 ### UNIQUE constraint
 - 특정 column 또는 column 조합의 값이 중복되지 않도록 DB가 강제하는 제약조건
 - 애플리케이션이 아니라 DB가 최종적으로 보장
-- NULL의 중복 허용 규칙은 DB마다 다르므로, 중복 방지용 필수 키에는 NOT NULL도 함께 둔다.
 
 
 ### Idempotency (멱등성)
@@ -39,7 +38,7 @@ SeriesInstanceUID
 SOPInstanceUID
 ```
 - DICOM 영상에는 일반적으로 식별자가 있다.
-- 예를 들어 AI 분석 단위가 DICOM instance라고 가정해보면 (아래 ABC123은 설명용 약칭이며 실제 DICOM UID 형식은 아니다)
+- 예를 들어 AI 분석 단위가 DICOM instance라고 가정해보면
 ```
 SOPInstanceUID = 1.2.840.123456...
 
@@ -66,8 +65,6 @@ job 101 → ABC123
 
 ### Idempotency Key
 - API 요청 자체에 고유한 키를 붙일수 있다.
-- 같은 요청의 재시도에는 같은 키를 사용한다. 서버는 키와 요청 내용·처리 상태를 저장하고, 같은 키로 다른 내용이 오면 거부하도록 설계한다.
-- UNIQUE만으로 외부 API 호출 같은 부수 효과까지 한 번만 실행되는 것은 아니므로, 외부 호출에도 멱등성 처리가 필요하다.
 
 
 ### 마무리
@@ -75,7 +72,7 @@ job 101 → ABC123
 중복 여부
 → UNIQUE
 
-같은 DB 트랜잭션 안의 작업을 모두 반영하거나 모두 취소
+두 작업 모두 성공 여부
 → Transaction
 
 동시 요청 충돌
@@ -90,7 +87,7 @@ job 101 → ABC123
 
 처음부터 너무 복잡하게 말하지 말고:
 
-> **“먼저 시스템에서 동일 영상과 동일 분석 작업을 식별할 수 있는 고유 기준을 정의하겠습니다. 예를 들어 DICOM UID와 모델 버전 조합이 동일한 작업의 재요청을 중복으로 본다면 해당 값에 UNIQUE constraint를 두어 DB 레벨에서 중복 생성을 막을 수 있습니다. 애플리케이션에서도 기존 작업을 먼저 확인할 수 있지만, 동시에 요청이 들어오면 둘 다 존재하지 않는다고 판단하는 race condition이 생길 수 있기 때문에 DB UNIQUE constraint를 최종 방어선으로 두겠습니다. 중복 요청이 들어온 경우에는 새 작업을 만들지 않고 기존 job을 반환하도록 멱등하게 처리하겠습니다.”**
+> **“먼저 시스템에서 동일 영상과 동일 분석 작업을 식별할 수 있는 고유 기준을 정의하겠습니다. 예를 들어 DICOM UID와 모델 버전 조합이 동일한 작업을 중복으로 보지 않는다면 해당 값에 UNIQUE constraint를 두어 DB 레벨에서 중복 생성을 막을 수 있습니다. 애플리케이션에서도 기존 작업을 먼저 확인할 수 있지만, 동시에 요청이 들어오면 둘 다 존재하지 않는다고 판단하는 race condition이 생길 수 있기 때문에 DB UNIQUE constraint를 최종 방어선으로 두겠습니다. 중복 요청이 들어온 경우에는 새 작업을 만들지 않고 기존 job을 반환하도록 멱등하게 처리하겠습니다.”**
 
 ```
 UNIQUE
@@ -119,7 +116,3 @@ DB UNIQUE
 
 
 > **“블록체인 transaction 처리에서도 transaction의 고유 식별자를 기준으로 중복 반영되지 않도록 처리한 경험이 있습니다. 같은 원리로 의료영상 분석 job도 시스템에서 유일성을 판단할 key를 정의하고 DB constraint와 application logic을 같이 활용할 수 있다고 생각합니다.”**
-
-### 참고 자료
-- [PostgreSQL UNIQUE 제약조건](https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS)
-- [DICOM UID 규칙](https://dicom.nema.org/medical/dicom/current/output/chtml/part05/chapter_9.html)

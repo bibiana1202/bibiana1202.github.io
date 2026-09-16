@@ -5,7 +5,8 @@ tags: ["cs", "worker"]
 draft: false
 ---
 
-> 오래 걸리는 분석 작업의 스케줄링, 상태 관리, 비동기 처리 구조를 정리한다.
+> AI 분석 작업의 스케줄링, 상태 관리 및 서비스 연계  
+> 비동기 처리, 작업 스케줄링 등 Backend 설계 경험
 
 ### Question?
 □ API server 역할  
@@ -48,7 +49,7 @@ draft: false
 
 
 ### Job Queue
-- 작업을 보관해 worker가 가져갈 수 있게함. 전달 순서는 queue 종류에 따라 다르며, 병렬 처리에서는 완료 순서도 달라질 수 있다.
+- 작업을 순서대로 저장해 worker가 가져갈 수 있게함
 - 처리 속도 차이를 흡수
 - worker 여러개가 병렬 처리
 - 실패한 작업 재처리, 부하조절
@@ -67,8 +68,7 @@ draft: false
 
 ### worker가 작업중 죽으면 ?
 - 복구 전략이 필요
-- queue 시스템에 따라 ack/visibility timeout 같은 메커니즘을 제공한다. 결과를 안전하게 저장한 뒤 ack 또는 메시지 삭제를 수행한다.
-- 오래 걸리는 작업은 visibility timeout/lease를 연장하고, 만료 후 재전달될 수 있으므로 멱등하게 처리한다. Queue 재전달만으로 DB의 RUNNING 상태가 자동 복구되는 것은 아니므로 상태 복구도 설계해야 한다.
+- queue 시스템이라면 ack/visibility timeout 같은 메커니즘 제공
 
 
 ### Retry
@@ -122,7 +122,6 @@ PENDING
 - queue 에 전달
 - jobId 반환
 - 실제 AI 분석 : worker 역할로 넘긴다.
-- DB에 job을 저장한 뒤 queue 전송만 실패할 수 있으므로, 전달 누락 복구가 필요하다. 예를 들어 job과 outbox 기록을 같은 DB 트랜잭션에 저장하고 별도 전달자가 queue로 보내도록 할 수 있다.
 
 
 
@@ -150,8 +149,10 @@ API Server + scheduler/worker 를 분리했고,
 주기적으로:
 
 ```
-주기적인 데이터 확인
-알림 발송
+blockchain watcher
+prediction round
+price check
+FCM
 외부 API 데이터 갱신
 ```
 
@@ -176,9 +177,3 @@ Worker가 중간에 죽으면?
     
 Scheduler가 두 번 실행되면?
 > 같은 작업이 중복 실행될 수 있습니다. 그래서 scheduler 자체를 단일 worker에서만 실행하거나 distributed lock을 두고, 실제 작업 생성 단계에서도 unique key나 idempotency를 적용해서 중복 실행이 최종 데이터에 영향을 주지 않도록 하겠습니다.
-
-Worker를 분리하는 것만으로 scheduler 중복 실행이 방지되지는 않는다. Scheduler 실행 주체와 작업 생성의 중복 방지 키를 별도로 관리해야 한다. Lease 만료 뒤 이전 worker가 계속 동작할 수도 있으므로 결과 저장 시 현재 소유권이나 버전을 확인하고, 중복 반영을 막는다.
-
-### 참고 자료
-- [Amazon SQS visibility timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html)
-- [Transactional outbox 패턴](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)
