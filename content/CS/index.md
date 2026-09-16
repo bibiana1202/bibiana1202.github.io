@@ -13,4 +13,8 @@ draft: false
 4. [[CS/database-index-btree|Index]]
 5. [[CS/transaction-lock-isolation|Transaction]]
 
+6. [[CS/unique-idempotency|Unique & Idempotency & 중복 처리]]
+7. [[CS/api-worker|API와 Worker]]
+8. [[CS/timeout-retry-backoff|Timeout / Retry / Backoff]]
+
 [[index|홈으로]]
