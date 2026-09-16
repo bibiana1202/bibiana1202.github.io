@@ -8,7 +8,12 @@ const previewContent = path.join(projectRoot, ".preview-local", "content")
 
 async function isInside(parent, candidate) {
   const relative = path.relative(await fs.realpath(parent), await fs.realpath(candidate))
-  return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
+  return (
+    relative !== "" &&
+    relative !== ".." &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  )
 }
 
 async function copyPublishedContent() {
@@ -55,6 +60,12 @@ async function renderDraft(sourceRoot, draftPath) {
   const filename = path.basename(draftPath)
   const draftName = path.basename(filename, ".md")
   let markdown = await fs.readFile(draftPath, "utf8")
+
+  if (!markdown.trim()) {
+    console.warn(`빈 초안 파일은 미리보기에서 건너뜁니다: ${filename}`)
+    return false
+  }
+
   const frontmatter = markdown.match(/^---\n([\s\S]*?)\n---/)
 
   if (!frontmatter || !/^draft:\s*true\s*$/m.test(frontmatter[1])) {
@@ -71,15 +82,10 @@ async function renderDraft(sourceRoot, draftPath) {
   }
 
   markdown = markdown.replace(/^draft:\s*true\s*$/m, "draft: false")
-  const publishedAtRoot = await fs
-    .access(path.join(previewContent, filename))
-    .then(() => true)
-    .catch(() => false)
-  const relativeOutput =
-    filename === "portfolio.md" && !publishedAtRoot ? filename : path.join("Drafts", filename)
-  const output = path.join(previewContent, relativeOutput)
+  const output = path.join(previewContent, "Drafts", filename)
   await fs.mkdir(path.dirname(output), { recursive: true })
   await fs.writeFile(output, markdown)
+  return true
 }
 
 export async function refreshBlogPreview() {
@@ -94,16 +100,22 @@ export async function refreshBlogPreview() {
   const draftRoot = path.join(sourceRoot, "00_Drafts")
   const entries = await fs.readdir(draftRoot, { withFileTypes: true })
   const draftFiles = entries
-    .filter((entry) => entry.isFile() && !entry.isSymbolicLink() && entry.name.endsWith(".md"))
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        !entry.isSymbolicLink() &&
+        entry.name.endsWith(".md"),
+    )
     .map((entry) => path.join(draftRoot, entry.name))
     .sort((a, b) => a.localeCompare(b))
 
   await copyPublishedContent()
+  let renderedDrafts = 0
   for (const draftPath of draftFiles) {
-    await renderDraft(sourceRoot, draftPath)
+    if (await renderDraft(sourceRoot, draftPath)) renderedDrafts += 1
   }
 
-  console.log(`Blog preview refreshed: published content + ${draftFiles.length} drafts`)
+  console.log(`Blog preview refreshed: published content + ${renderedDrafts} drafts`)
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -44,7 +44,7 @@ npm run preview
 1. 회사 내부 정보, 개인정보, 비공개 URL, 키와 토큰, 고객·환자 데이터가 없는지 확인합니다.
 2. 중복 글과 사실관계, 프로젝트명·기간·수치·담당 범위를 확인합니다.
 3. 공개용 사본을 내용에 맞는 `journal/blog/10_Published` 하위 폴더에 둡니다.
-4. Portfolio 같은 고정 페이지는 `10_Published/portfolio.md`처럼 루트에 둘 수 있습니다.
+4. Index 같은 고정 페이지는 `10_Published/index.md`처럼 루트에 둘 수 있습니다.
 5. 공개본 frontmatter는 최소 `title`, `date`, `tags`, `draft: false`를 사용합니다.
 6. `관련 글`의 wikilink는 이미 승인된 공개 글만 가리키게 합니다.
 
@@ -82,13 +82,13 @@ SVG는 현재 공개 동기화에서 차단됩니다. 필요하면 PNG 또는 We
 ```bash
 cd /path/to/dev-blog
 nvm use
-npm run approve -- --file portfolio.md
+npm run approve -- --file index.md
 ```
 
 표시된 파일과 이미지가 모두 공개 대상인지 확인한 뒤 `--apply`를 붙입니다.
 
 ```bash
-npm run approve -- --file portfolio.md --apply
+npm run approve -- --file index.md --apply
 ```
 
 카테고리 글은 `10_Published` 기준 상대 경로를 사용합니다.
@@ -176,7 +176,7 @@ baseUrl: "bibiana1202.github.io/dev-blog"
 8. 첫 push에는 Quartz 설정, 배포 workflow, 검증 스크립트와 승인된 `content`가 모두 필요하므로 전체 변경 파일을 다시 확인합니다.
 9. 확인이 끝난 파일만 첫 구성 커밋에 포함하고 `main`을 push합니다.
 10. GitHub의 **Actions** 탭에서 `Deploy development blog` workflow가 성공했는지 확인합니다.
-11. Pages URL에서 홈, Portfolio, 카테고리, 검색, 태그, backlinks와 graph view를 확인합니다.
+11. Pages URL에서 Index, 카테고리, 검색, 태그, backlinks와 graph view를 확인합니다.
 
 현재 `.github/workflows/deploy.yml`은 push된 public repository만 읽습니다. private journal 경로나 초안에는 접근할 수 없습니다.
 
@@ -213,15 +213,15 @@ Quartz 설정, 레이아웃, workflow 또는 스크립트 변경은 `--push`가 
 
 ## 현재 상태
 
-- 선택한 public repository: `bibiana1202/bibiana1202.github.io` (생성 전)
-- 예정 공개 URL: `https://bibiana1202.github.io`
-- `origin`: 연결하지 않음
-- 실제 public push 승인: 꺼짐
+- public repository: `bibiana1202/bibiana1202.github.io`
+- 공개 URL: `https://bibiana1202.github.io`
+- `origin`: public repository에 연결됨
+- 실제 public push 승인: 켜짐
 - `quartz.config.ts`의 `baseUrl`: `bibiana1202.github.io`
-- 공개 승인 콘텐츠: 홈과 카테고리 안내 문서 6개
-- Portfolio: `00_Drafts`에 있으며 아직 운영 배포 대상이 아님
+- 공개 승인 콘텐츠: Index와 카테고리 안내 문서 6개
+- Index: `10_Published/index.md`가 운영 배포 대상임
 
-따라서 현재 `npm run preview`와 `./publish-blog.sh`는 로컬 확인용이고, `./publish-blog.sh --push`는 안전장치에 의해 차단됩니다.
+`npm run preview`와 `./publish-blog.sh`는 로컬 확인용이며, `./publish-blog.sh --push`를 실행하면 승인된 공개 콘텐츠가 운영에 반영됩니다.
 
 ## 참고 문서
 
@@ -229,3 +229,51 @@ Quartz 설정, 레이아웃, workflow 또는 스크립트 변경은 `--push`가 
 - [GitHub Pages 배포 소스 설정](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 - [GitHub Pages custom workflow 사용](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 - Quartz 프로젝트 내부 `docs/hosting.md`
+
+지금 Index는 블로그 홈이므로 아래 원본을 수정하면 됩니다.
+[Index 원본](/Users/anna/dev/journal/blog/10_Published/index.md)
+
+
+dev-blog/content/index.md는 자동 생성되는 복사본이므로 직접 수정하면 다음 동기화 때 덮어써져요.
+
+
+수정한 내용을 로컬에서 먼저 확인하려면:
+
+
+cd ~/dev/dev-blog
+
+
+nvm use
+
+
+npm run preview
+
+
+브라우저에서 http://localhost:8080을 열면 됩니다.
+
+
+
+여기까지는 운영에 반영되지 않아요.
+
+
+수정이 끝나고 공개본으로 확정하려면:
+
+
+
+
+npm run approve -- --file index.md
+
+
+npm run approve -- --file index.md --apply
+
+
+./publish-blog.sh
+
+
+각 명령의 의미는 다음과 같아요.
+1. 첫 번째 approve: 변경된 파일과 이미지의 승인 내용을 미리 확인
+2. 두 번째 approve --apply: 변경된 공개본의 해시 등록
+3. publish-blog.sh: journal에서 dev-blog/content로 복사하고 로컬 빌드 검증
+여기까지 해도 운영 배포는 안 됩니다. 최종 결과가 괜찮을 때 직접 배포하려면:
+./publish-blog.sh --push
+이 명령이 커밋과 GitHub push를 실행하고, GitHub Actions가 자동으로 운영 사이트를 갱신합니다.
