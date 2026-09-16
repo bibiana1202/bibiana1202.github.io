@@ -1,81 +1,323 @@
 ---
-title: "Node.js는 하나의 JavaScript 스레드로 어떻게 여러 요청을 처리할까?"
+title: Node.js 동작 원리
 date: 2026-09-16
-tags: ["cs", "nodejs", "event-loop"]
+tags:
+  - cs
+  - node
+  - java
 draft: false
 ---
+### Question?
+□ Node.js는 왜 single-thread라고 하는가?  
+□ 그런데 어떻게 여러 요청을 동시에 처리하는가?  
+□ Event Loop  
+□ Call Stack  
+□ Event Queue  
+□ I/O 처리는 누가 하는가?  
+□ async/await의 동작  
+□ `await`한다고 thread가 멈추는 게 아니라는 것  
+□ CPU 연산이 오래 걸리면 Node 서버에 무슨 일이 생기는가?
 
-Node.js를 single-thread라고 부르는 것은 기본 JavaScript 실행 흐름을 가리키는 설명이다. Node.js 프로세스 전체에 스레드가 하나만 있다는 뜻은 아니다.
+**반드시 대답할 수 있어야 하는 질문**
 
-## 실행과 대기를 구분하기
+> Node.js는 single-thread인데 어떻게 동시에 여러 요청을 처리하나요?
 
-하나의 JavaScript 실행 스레드에서는 동기 코드가 한 번에 하나씩 실행된다. 하지만 비동기 I/O를 기다리는 동안에는 다른 요청의 JavaScript를 실행할 수 있다. 여러 요청의 진행 시간이 겹치는 **동시성**과 여러 JavaScript 실행 흐름이 같은 순간에 실행되는 **병렬성**은 구분해야 한다.
+> async/await은 어떻게 동작하나요?
 
-CPU 계산을 JavaScript로 병렬 실행하려면 `worker_threads`나 별도 프로세스 같은 구성이 필요하다. [Node.js Worker 문서](https://nodejs.org/api/worker_threads.html)
+> await을 만나면 thread가 기다리는 건가요?
 
-## Promise, async, await
+---
+## Node.js
 
-Promise는 나중에 성공 값 또는 실패 이유로 정착할 수 있는 결과를 나타낸다. 상태는 pending, fulfilled, rejected로 구분된다. Promise 객체 자체가 작업을 수행하는 별도 스레드는 아니다.
+- Single Thread: Node.js 전체가 스레드 하나뿐이라는 뜻이 아니라, JavaScript 코드를 실행하는 메인 스레드가 기본적으로 하나라는 뜻
+- JavaScript 코드는 기본적으로 메인 스레드 1개에서 실행
+- 동기 JavaScript 코드는 메인 스레드에서 순차적으로 실행
+- DB / Network / File 같은 I/O는 비동기적으로 처리 가능
+- I/O를 기다리는 동안 Event Loop는 다른 작업을 처리할 수 있음
+- 그럼 java는 ? Java SpringBoot
 
-`async` 함수는 Promise를 반환한다. 함수의 코드는 첫 `await`에 도달하기 전까지 동기적으로 실행된다. `await`은 현재 async 함수의 후속 실행을 잠시 중단하고 호출자에게 제어권을 돌려준다. 남아 있는 동기 코드가 끝나야 다른 대기 작업도 실행될 기회를 얻는다.
+### Promise
 
-```javascript
-async function example() {
-  console.log('A');
-  await Promise.resolve();
-  console.log('C');
-}
+- "비동기 작업의 미래 결과"를 표현하는 객체
+- 작업이 아직 끝나지 않아도 Promise 객체는 즉시 반환될 수 있음
 
-example();
-console.log('B');
-// A → B → C
+상태:
+Pending → Fulfilled
+        → Rejected
+```
+             Promise
+                │
+             pending
+            (처리 중)
+             /    \
+            /      \
+           ↓        ↓
+      fulfilled   rejected
+        성공         실패
 ```
 
-Promise가 이미 fulfilled여도 `await` 이후는 마이크로태스크로 재개된다. rejected이면 그 지점에서 예외가 발생하므로 `try/catch` 등으로 처리해야 한다. [MDN await 문서](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
+```
+비동기 작업
+   ↓
+Promise 객체
+"결과를 나중에 줄게"
 
-## Event Loop와 Call Stack
+   ↓
 
-Call Stack은 현재 실행 중인 함수 호출을 관리한다. Event Loop는 타이머나 I/O 등 준비된 콜백을 실행하는 반복적인 처리 흐름이다. 메인 스레드 옆에서 별도 스레드처럼 명령을 내리는 존재로 이해하면 혼동하기 쉽다.
+pending
+   ↓
+성공 → fulfilled → 결과값
+실패 → rejected  → 에러
 
-Node.js에는 단 하나의 Event Queue만 있는 것이 아니다. poll, check 등 여러 phase가 있고, Promise 후속 처리는 마이크로태스크로 다뤄진다. `process.nextTick()`에도 별도 큐가 있다. 따라서 모든 비동기 작업이 하나의 FIFO 큐에 들어간다는 그림은 개념적인 단순화다. [Node.js Event Loop 문서](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
 
-## DB 조회는 누가 처리할까?
+결과를 받는 방법
 
-Promise를 반환하는 DB 드라이버를 사용한다고 가정하자.
+Promise
+ ├─ .then() / .catch()
+ │
+ └─ async/await
+```
+### async
 
-```javascript
-async function loadUsers(db) {
-  const users = await db.query('SELECT id, name FROM users');
-  return users;
-}
+- async 함수는 항상 Promise를 반환
+- async를 붙인다고 코드를 별도 Thread에서 실행하는 것은 아님 ★
+
+
+### await
+
+- Promise가 완료될 때까지 "현재 async 함수의 이후 실행"을 잠시 중단
+- Node의 메인 Thread 전체를 Blocking하는 것은 아님 ★
+- 기다리는 동안 Event Loop는 다른 작업을 처리할 수 있음
+
+즉:
+await = 비동기 코드를 동기 코드처럼 순차적으로 작성할 수 있게 해주는 문법
+
+await ≠ Blocking
+await ≠ 실제 동기 처리
+
+
+
+### Call Stack
+- javascript가 지금 어떤 함수를 실행하고 있는지 관리하는 구조
+```
+             ┌──────────────┐
+             │  Call Stack  │
+             │ JS 코드 실행   │
+             └──────▲───────┘
+                    │
+                    │
+              Event Loop
+                    │
+                    │
+             ┌──────┴───────┐
+             │ 실행 대기 작업    │
+             │    Queue     │
+             └──────────────┘
 ```
 
-```text
-Node.js                         MariaDB
-JS에서 db.query 호출 ─────────→ SQL 실행
-함수는 await에서 중단             인덱스·데이터 접근
-다른 요청의 JS 실행 가능          결과 생성
-결과 수신·드라이버 처리 ←──────── 응답
-Promise 정착
-마이크로태스크로 함수 재개
+### Event Loop
+- 지금 실행할 수 있는 JavaScript 작업이 있는지 계속 확인하고, 실행 가능한 작업을 Call Stack에서 실행 될수 있도록 연결하는 매커니즘
+- 비동기 작업이 완료되어 후속 JavaScript 작업을 실행할 수 있게 되었을 때, 그 작업이 Main JS Thread에서 실행될 수 있도록 Node의 실행 흐름을 조율한다.
+```
+MariaDB
+   ↓
+결과 도착
+   ↓
+후속 작업이 실행 가능해짐
+   ↓
+Queue 등에서 실행 시점을 기다림
+   ↓
+Event Loop
+   ↓
+JavaScript에서 후속 처리
 ```
 
-실제 SQL 실행은 MariaDB 프로세스가 한다. Node.js는 통신을 하고, 응답을 드라이버에서 해석해 Promise 결과를 전달한다. DB가 Node.js의 Call Stack에 직접 함수를 넣는 것은 아니다. 결과를 파싱하거나 가공하는 Node.js 코드에도 CPU 시간이 든다.
 
-## 모든 I/O가 libuv 스레드 풀로 갈까?
+### Event Queue
+- 비동기 작업이 완료되면 관련 callback이나 후속 작업이 실행 가능한 상태가 되고, Event Loop가 적절한 시점에 JavaScript가 실행되도록 조율한다.
+- 실제 Node에는 큐가 하나만 있는 건 아니고 Event Loop의 여러 phase와 queue, Promise용 microtask queue 등이 있다.
+```
+ 실행 가능한 작업들
+        │
+        ↓
+   [대기하는 곳]
+        │
+        ↓
+   Event Loop
+        │
+        ↓
+Main JS Thread에서 실행
+```
 
-네트워크 I/O는 주로 OS의 비동기/준비 상태 통지 기능을 이용한다. 파일 시스템 비동기 API와 일부 crypto, DNS API 등은 libuv 스레드 풀을 사용한다. DB 통신을 한다고 SQL 계산이 libuv 스레드 풀에서 실행되는 것은 아니다. 실제 경로는 사용한 API에 따라 다르다. [Node.js Event Loop와 Worker Pool 설명](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
 
-## CPU 계산이 길면 왜 서버가 느려질까?
+### 이해하면 좋은 전체 과정
+```
+app.get("/users", async (req, res) => {
 
-오래 걸리는 동기 반복문이 메인 스레드를 점유하면 다른 요청, 타이머 콜백, DB 응답의 후속 JavaScript도 기다린다. 이를 async 함수 안에 넣어도 같은 문제가 생긴다.
+    const users =
+        await db.query("SELECT * FROM users");
 
-대응 방법은 작업에 따라 다르다. 계산 자체를 줄이거나 작은 단위로 나누고, 큰 CPU 작업은 Worker나 별도 작업 프로세스로 분리할 수 있다. 무한히 마이크로태스크만 이어 붙이는 방식도 I/O 처리를 굶길 수 있으므로 단순히 Promise를 추가하는 것으로 해결되지 않는다.
+    res.json(users);
+});
+```
 
-## 짧게 설명하기
+```
+① Client
+     │
+     │ GET /users
+     ↓
 
-> Node.js는 기본적으로 하나의 메인 스레드에서 JavaScript를 실행하지만, 비동기 I/O를 기다리는 동안 다른 요청을 진행할 수 있다. 작업이 완료되면 준비된 콜백과 Promise 후속 처리가 실행된다. 다만 오래 걸리는 동기 계산은 메인 스레드를 점유하므로 다른 요청까지 지연시킨다.
+② Node Main JS Thread
 
-## 관련 글
+   /users JS 실행
+     │
+     │
+     ↓
+   db.query()
+     │
+     │ SQL 요청
+     │
+     └──────────────────────┐
+                            ↓
 
-[[CS/index|CS 학습 글 목록]]
+③                     MariaDB Process
+
+                       SQL 실행
+                       ███████
+                       ███████
+
+					   Node에서는
+					   await 이후 실행 중단
+					
+					   하지만 Main Thread는
+					   다른 JS 처리 가능
+					
+					   Request B
+					   Request C
+					   ...
+
+                            │
+④                     SQL 완료
+                            │
+       결과                  │
+   ←────────────────────────┘
+
+⑤ Node에 결과 도착
+
+   Promise 완료
+       ↓
+   await 이후 코드가
+   실행 가능한 상태
+       ↓
+   Event Loop를 통한
+   실행 흐름 조율
+       ↓
+   Main JS Thread
+       ↓
+
+⑥ res.json(users)
+```
+
+### libuv
+- Node가 하는 작업 중에서 일부 파일 시스템이나 crypto처럼 libuv Thread Pool을 활용하는 작업이 있다.
+```
+비동기 I/O
+    │
+    ├─ Network → OS의 비동기 I/O 기능
+    │
+    ├─ DB → Network → DB 프로세스/서버가 실제 처리
+    │
+    └─ 일부 File/Crypto 등 → libuv Thread Pool 활용
+```
+
+
+### CPU 작업
+```
+app.get("/calculate", (req, res) => {
+
+    let result = 0;
+
+    for (let i = 0; i < 100000000000; i++) {
+        result += i;
+    }
+
+    res.json(result);
+});
+
+Main JS Thread
+
+████ CPU 계산 ████
+████ CPU 계산 ████
+████ CPU 계산 ████
+
+Request B → 기다림
+Request C → 기다림
+DB 후속 JS → 기다림
+Timer callback → 기다림
+```
+- for문을 실행하는것은 : Node Main JS Thread
+- 다른 프로세스 에게 넘긴게 아니니까 Main Thread를 계속 점유
+- 그래서 Event Loop가 실행시키고 싶은 다른 JS 작업이 있어도 Main Thread가 바쁘니까 밀리게 된다.
+
+### 전체 그림
+```
+                    Node.js Process
+
+               JavaScript Main Thread
+                        │
+                   Call Stack
+                        │
+                   JavaScript 실행
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+         동기/CPU 작업          비동기 I/O
+              │                   │
+        여기서 직접 실행       외부에 작업 요청
+              │                   │
+      오래 걸리면 문제!      OS / DB / libuv 등
+                                  │
+                                  │ 완료
+                                  ↓
+                         실행 가능한 후속 작업
+                                  │
+                             Event Loop
+                                  │
+                                  ▼
+                         JavaScript 실행 재개
+```
+
+| 주체                      | 역할                                  |
+| ----------------------- | ----------------------------------- |
+| **Node Main JS Thread** | JavaScript 코드 실행                    |
+| **MariaDB Process**     | 실제 SQL 처리                           |
+| **OS / libuv 등**        | 종류에 따라 비동기 I/O를 지원                  |
+| **Event Loop**          | 완료된 비동기 작업 이후의 JS가 적절한 시점에 실행되도록 조율 |
+
+> **Node가 Single Thread라는 것은 JavaScript를 실행하는 Main Thread가 기본적으로 하나라는 뜻이지, 모든 작업을 그 Thread 혼자 한다는 뜻이 아니다.**
+
+
+### 마무리
+> Node.js는 single-thread인데 어떻게 여러 요청을 동시에 처리하나요?
+> : Node.js는 JavaScript 코드를 기본적으로 하나의 메인 스레드에서 실행합니다. 하지만 DB나 네트워크 같은 I/O 작업은 메인 스레드가 직접 기다리지 않고 OS의 비동기 I/O기능을 활용합니다. I/O를 기다리는 동안 메인 스레드는 다른 요청을 처리할 수 있고, 작업이 완료되면 Event Loop를 후속 JavaScript 작업이 실행됩니다. 그래서 하나의 JavaScript 메인 스레드로도 많은 I/O 요청을 효율적으로 처리할 수 있습니다.
+
+> async/await은 어떻게 동작하나요?
+> : async 함수는 Promise를 반환하고, await을 만나면 해당 Promise가 완료될때 까지 그 async 함수의 후속 실행을 잠시 중단합니다. 하지만 메인 스레드 전체를 Blocking하는 것은 아니어서 그동안 Event Loop가 다른 작업을 처리할 수 있습니다. Promise가 완료되면 이후 코드가 다시 실행됩니다.
+
+> await을 만나면 Thread가 기다리는 건가요?
+> : 아닙니다. await를 만나면 Promise가 완료될 때까지 해당 async 함수의 후속 실행이 중단되지만 메인 스레드 자체를 Blocking 하지는 않습니다. 그동안 Event Loop가 다른 실행 가능한 작업들이 메인 스레드에서 실행되도록 조율할 수 있습니다. 이후 Promise가 완료되면 await 이후 코드도 다시 메인 스레드 에서 실행됩니다.
+
+```
+MariaDB → SQL 처리
+
+A 함수 → await에서 중단
+
+Main Thread → 다른 JS 실행 가능
+
+Event Loop → 실행 가능한 JS 작업들의 실행을 조율
+
+DB 완료
+→ Promise fulfilled
+→ A 함수의 후속 부분도 실행 가능
+→ Main Thread에서 실행
+```

@@ -1,69 +1,78 @@
 ---
-title: "동기·비동기와 Blocking·Non-blocking 구분하기"
+title: 동기,비동기 & Blocking,Non-blocking
 date: 2026-09-16
-tags: ["cs", "async", "io"]
+tags:
+  - cs
+  - 동기
+  - 비동기
+  - blocking
+  - non-blocking
+  - synchronous
+  - asynchronous
 draft: false
 ---
+### Question?
+□ synchronous / asynchronous 차이  
+□ blocking / non-blocking 차이  
+□ 둘이 왜 같은 개념이 아닌가?  
+□ I/O 작업이란?  
+□ CPU-bound / I/O-bound 차이
 
-동기/비동기와 Blocking/Non-blocking은 함께 등장하지만, 설명하는 관점이 다르다. 이 글에서는 **호출한 실행 흐름과 작업 완료 통지**를 기준으로 구분한다. 분야와 API 문서에 따라 용어 범위가 조금씩 다를 수 있다.
+**반드시 대답할 수 있어야 하는 질문**
 
-## 두 가지 질문으로 나누기
+> Blocking과 Non-blocking 차이는?
 
-| 구분 | 확인할 질문 | 의미 |
-| --- | --- | --- |
-| Blocking | 호출이 실행 흐름을 붙잡는가? | 결과나 진행 조건을 기다리는 동안 호출한 스레드가 다음 코드를 실행하지 못함 |
-| Non-blocking | 기다리지 않고 제어권을 돌려주는가? | 당장 완료할 수 없어도 반환하며, 결과가 아직 준비되지 않았음을 알릴 수도 있음 |
-| 동기 | 호출 흐름 안에서 완료를 확인하는가? | 호출과 결과 처리가 직접 연결됨 |
-| 비동기 | 완료를 나중에 전달받는가? | 콜백, Promise, 이벤트 등으로 후속 처리를 연결함 |
+> 비동기와 Non-blocking은 같은 건가요?
 
-Non-blocking 호출이 반드시 최종 결과를 바로 주는 것은 아니다. 예를 들어 non-blocking 소켓 읽기는 데이터가 없을 때 아직 읽을 수 없다는 상태를 반환할 수 있다. 호출자는 준비 상태를 기다리거나 나중에 다시 시도한다.
+> DB 조회/API 호출은 왜 I/O 작업인가요?
 
-Node.js의 비동기 파일 API와 동기 파일 API를 비교하면 실행 흐름의 차이가 보인다. [Node.js Blocking과 Non-blocking 설명](https://nodejs.org/en/learn/asynchronous-work/overview-of-blocking-vs-non-blocking)
+---
 
-```javascript
-import { readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+### Blocking
+- 작업이 끝날 때까지 현재 실행 흐름을 기다리며 다음 작업으로 진행하지 못하는 것
 
-// 파일을 읽는 동안 현재 JavaScript 실행 흐름이 멈춘다.
-const first = readFileSync('example.txt', 'utf8');
+### Non-blocking
+- 현재 실행 흐름을 붙잡아두지 않는 것
+- Node 가 I/O 작업에 잘 맞는 이유 중 하나가 I/O를 기다리는 동안 메인 JavaScript 실행 흐름을 계속 붙잡아두지 않는 구조를 가지고 있기 때문이다. Node.js 와 Java
 
-// Promise를 받아 두고, 완료 결과는 나중에 처리한다.
-const pending = readFile('example.txt', 'utf8');
-console.log('읽기 요청 후 다른 코드 실행');
-const second = await pending;
-```
+> 호출한 실행 흐름을 붙잡아 두느냐?
 
-이 예제는 `example.txt`가 있는 환경의 ES module에서 실행한다. 파일 읽기 오류 처리 코드는 생략했다.
 
-## await은 무엇을 기다릴까?
+### Synchronous (동기)
+- 앞 작업의 결과를 중심으로 순서가 맞춰진 흐름
 
-`await`은 해당 async 함수의 후속 실행을 중단한다. Promise가 정착하면 후속 코드가 마이크로태스크로 재개되며, 실패하면 해당 지점에서 예외가 발생한다. 이미 완료된 Promise를 기다려도 후속 실행은 현재의 동기 실행과 분리된다. [MDN await 문서](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
+### asynchronous (비동기)
+- 앞 작업이 끝나는 동안 호출한 쪽이 다른 일을 진행 할수 있고, 결과가 준비되면 나중에 callback/Promise/event 같은 방식으로 후속 처리를 이어가는 구조
 
-따라서 비동기 I/O를 `await`하는 동안 다른 JavaScript 작업이 실행될 수 있다. 하지만 `await` 뒤에 적었다는 이유만으로 호출 대상이 non-blocking이 되는 것은 아니다.
+> 작업 완료와 후속 처리를 어떤 방식으로 조율하느냐?
 
-```javascript
-async function calculate() {
-  // 이 계산은 첫 await 전에 현재 스레드에서 실행된다.
-  let total = 0;
-  for (let i = 0; i < 1_000_000; i++) total += i;
-  return total;
-}
 
-await calculate();
-```
+### I/O
+- CPU가 계산하는 것 자체가 아니라 외부 장치나 시스템과 데이터를 주고받는 작업
 
-`async`는 반환값을 Promise로 다루게 해 주는 문법이다. 계산을 다른 스레드로 자동 분리하지 않는다.
+### CPU-bound vs I/O-bound
+- CPU-bound : 시간 대부분을 CPU 계산에 쓰는 작업
+	- 영상처리, 이미지 변환, 압축, 암호화, 대규모 수학 계산 , AI interface
+- I/O-bound : 시간 대부분을 외부 결과를 기다리는데 쓰는 작업
+	- DB, Network, File, External API
 
-## I/O-bound와 CPU-bound
 
-I/O는 파일, 네트워크, 외부 서버 등과 데이터를 주고받는 작업이다. 별도 DB 서버에 질의하는 애플리케이션은 요청과 응답을 주고받으므로 I/O를 수행한다. DB 서버 내부에서는 SQL 실행을 위해 CPU 계산과 저장장치 접근이 일어난다.
 
-CPU-bound는 CPU 계산이 주된 병목인 상황이고, I/O-bound는 입출력 대기가 주된 병목인 상황이다. 작업 이름만으로 고정되는 속성은 아니다. DB 조회도 애플리케이션에서는 응답 대기가 길지만 DB 서버에서는 계산이 병목일 수 있다. AI 추론도 실행 환경에 따라 CPU, GPU, 메모리 등이 병목이 될 수 있다.
+### 마무리
+> Blocking 과 Non-blocking의 차이가 무엇인가요?
+> : Blocking은 어떤 작업이 완료될 때 까지 현재 실행 흐름이 기다리면서 다음 작업을 진행하지 못하는 방식이고, Non-blocking은 작업 완료를 기다리는 동안 현재 실행 흐름이 다른 작업을 수행할 수 있는 방식이다.
 
-## 짧게 설명하기
+> 비동기와 Non-blocking은 같은 건가요?
+> : 같은 개념은 아닙니다. Blocking/Non-blocking은 호출한 실행 흐름이 작업 완료까지 막히는지에 대한 개념이고, 동기/비동기는 작업 완료와 후속 처리를 어떤 방식으로 조율하는지에 대한 개념입니다. 실무에서는 비동기와 Non-blocking이 함께 사용되는 경우가 많아서 비슷하게 느껴질수 있습니다.
 
-> Blocking/Non-blocking은 호출이 실행 흐름을 막는지에 관한 구분이다. 동기/비동기는 작업의 완료와 후속 처리를 연결하는 방식에 관한 구분이다. `async/await`은 Promise 기반 흐름을 표현하며, 실제 작업의 non-blocking 여부는 호출한 API와 코드가 결정한다.
+> async/await를 쓰면 blocking 인가요?
+> : 아닙니다. await을 만나면 해당 async 함수의 후속 실행은 Promise가 완료될때 까지 중단되지만, Node의 메인 실행 흐름 전체를 blocking 하는 것은 아닙니다. 그동안 이벤트 루프는 다른 요청이나 작업을 처리할 수 있습니다.
 
-## 관련 글
+**`async/await = non-blocking` ❌**
 
-[[CS/index|CS 학습 글 목록]]
+**`async/await = Promise 기반 비동기 코드를 다루는 문법` ⭕**
+
+**`non-blocking인지 여부 = 실제 작업이 메인 실행 흐름을 점유하느냐` ⭕**
+
+> DB 조회/API 호출은 왜 I/O 작업인가요?
+> : CPU 내부에서 계산만으로 결과를 만드는 작업이 아니라 네트워크를 통해 DB나 외부 서버와 데이터를 주고 받고 그 결과를 기다리는 작업이기 때문에 I/O 작업입니다.
