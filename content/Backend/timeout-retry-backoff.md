@@ -1,7 +1,7 @@
 ---
 title: "Timeout / Retry / Backoff"
 date: 2026-09-16
-tags: ["cs", "timeout", "retry"]
+tags: ["backend", "timeout", "retry", "backoff", "jitter", "circuit-breaker"]
 draft: false
 ---
 ### Question?

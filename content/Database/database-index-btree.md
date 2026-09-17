@@ -1,9 +1,7 @@
 ---
 title: Index
 date: 2026-09-16
-tags:
-  - cs
-  - index
+tags: ["database", "index", "btree", "sql", "query-optimization"]
 draft: false
 ---
 ### Question?

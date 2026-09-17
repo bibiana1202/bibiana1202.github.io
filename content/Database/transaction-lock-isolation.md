@@ -1,9 +1,7 @@
 ---
 title: Transaction
 date: 2026-09-16
-tags:
-  - cs
-  - Transaction
+tags: ["database", "transaction", "acid", "locking", "isolation", "deadlock"]
 draft: false
 ---
 ### Question?

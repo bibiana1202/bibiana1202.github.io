@@ -1,10 +1,7 @@
 ---
 title: "Index"
 date: 2026-09-14
-tags:
-  - index
-  - backend
-  - healthcare-it
+tags: ["portfolio", "backend", "healthcare-it", "fintech"]
 draft: false
 ---
 

@@ -1,10 +1,12 @@
 ---
 title: "Infrastructure"
 date: 2026-09-12
-tags: []
+tags: [infrastructure]
 draft: false
 ---
 
-공개할 글을 준비하고 있습니다.
+Linux, AWS, Nginx와 서버 운영의 기본을 정리합니다.
+
+- [[Infrastructure/linux-server-operations|Linux]]
 
 [[index|홈으로]]

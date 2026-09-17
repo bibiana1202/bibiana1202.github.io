@@ -1,10 +1,7 @@
 ---
 title: Node.js 동작 원리
 date: 2026-09-16
-tags:
-  - cs
-  - node
-  - java
+tags: ["backend", "nodejs", "event-loop", "asynchronous", "promise"]
 draft: false
 ---
 ### Question?

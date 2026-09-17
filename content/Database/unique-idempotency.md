@@ -1,7 +1,7 @@
 ---
 title: "Unique & Idempotency & 중복 처리"
 date: 2026-09-16
-tags: ["cs", "unique", "idempotency"]
+tags: ["database", "unique-constraint", "idempotency", "concurrency"]
 draft: false
 ---
 ### Question?

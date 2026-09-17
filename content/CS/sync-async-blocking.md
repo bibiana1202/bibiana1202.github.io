@@ -1,14 +1,7 @@
 ---
 title: 동기,비동기 & Blocking,Non-blocking
 date: 2026-09-16
-tags:
-  - cs
-  - 동기
-  - 비동기
-  - blocking
-  - non-blocking
-  - synchronous
-  - asynchronous
+tags: ["cs", "synchronous", "asynchronous", "blocking", "non-blocking", "io"]
 draft: false
 ---
 ### Question?

@@ -1,10 +1,17 @@
 ---
 title: "Backend"
 date: 2026-09-12
-tags: []
+tags: [backend]
 draft: false
 ---
 
-공개할 글을 준비하고 있습니다.
+API 설계, 실행 모델, 비동기 작업과 테스트를 정리합니다.
+
+- [[Backend/api-worker|API와 Worker]]
+- [[Backend/go-concurrency|Go]]
+- [[Backend/http-rest-api|HTTP & REST API]]
+- [[Backend/nodejs-event-loop|Node.js 동작 원리]]
+- [[Backend/testing-code-review|테스트 코드]]
+- [Timeout / Retry / Backoff](timeout-retry-backoff.md)
 
 [[index|홈으로]]

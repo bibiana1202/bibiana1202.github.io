@@ -1,10 +1,7 @@
 ---
 title: Process vs Thread
 date: 2026-09-16
-tags:
-  - cs
-  - process
-  - thread
+tags: ["cs", "process", "thread", "concurrency", "mutex"]
 draft: false
 ---
 ### Question?
