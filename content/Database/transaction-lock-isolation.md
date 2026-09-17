@@ -18,11 +18,11 @@ draft: false
 ---
 ### Transaction
 - 여러 DB 작업을 하나의 논리적인 작업 단위로 묶어서, 전체 작업의 일관성과 신뢰성을 보장하기 위한 기능
-- 각각의 요청이 독립적으로 만드는 DB 작업 단위
+- 업무상 함께 성공하거나 실패해야 하는 DB 작업의 경계. HTTP 요청과 transaction은 반드시 1:1 관계가 아니다.
 - 여러 DB 작업을 하나의 논리적인 작업 단위로 묶는다.
 
 ### COMMIT / ROLLBACK
-- commit은 transaction에서 수행한 변경을 확정하는 것이고, rollback은 문제가 발생했을 때 tranaction의 변경사항을 취소하는 것
+- commit은 transaction에서 수행한 변경을 확정하는 것이고, rollback은 문제가 발생했을 때 transaction의 변경사항을 취소하는 것
 
 ### 데이터 정합성
 - 서로 관련된 데이터들이 정해진 규칙과 관계에 맞게 모순 없이 유지되는 상태
@@ -112,3 +112,12 @@ Transaction
 
 > Transaction 이 뭔가요?
 > : Transaction은 여러 DB 작업을 하나의 논리적인 작업 단위로 묶어서 처리하는 것입니다. 모든 작업이 성공하면 COMMIT하고, 중간에 실패하면 ROLLBACK해서 데이터가 부분적으로만 반영되는 것을 방지 할수 있습니다. 대표적인 특성으로 ACID가 있습니다.
+
+### PostgreSQL Read Committed와 동시 갱신
+- PostgreSQL의 기본 격리 수준은 Read Committed이다. 일반 SELECT는 각 명령이 시작할 때까지 커밋된 데이터를 보므로, 같은 transaction에서 SELECT를 두 번 실행해도 사이에 다른 transaction이 커밋했다면 결과가 달라질 수 있다.
+- 예를 들어 A와 B가 모두 잔액 100을 읽고, 각각 10과 20을 차감한 값인 90과 80을 저장하면 한쪽 변경을 덮어쓰는 lost update가 생길 수 있다. transaction으로 묶는 것만으로 이런 애플리케이션의 읽기-계산-쓰기 패턴이 안전해지는 것은 아니다.
+- 단순 차감은 `UPDATE accounts SET balance = balance - 10 WHERE id = 1 AND balance >= 10`처럼 조건부 갱신하고 영향받은 행 수를 확인할 수 있다. 복잡한 판단은 같은 transaction 안에서 먼저 `SELECT ... FOR UPDATE`로 잠근 뒤 최신 값을 읽고 처리하거나, version 조건을 이용한 낙관적 잠금을 고려한다.
+- PostgreSQL에서는 Read Uncommitted도 Read Committed처럼 동작한다. Serializable에서도 직렬화 실패가 발생하면 전체 transaction을 재시도할 수 있도록 설계해야 한다.
+
+### 참고 자료
+- [PostgreSQL Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)

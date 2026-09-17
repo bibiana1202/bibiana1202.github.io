@@ -118,7 +118,7 @@ ss -lntp | grep 3000
 ### Process 죽었으면?
 - ps aux | grep node
 - systemctl status my-api
-- journalctl -u my-api```
+- journalctl -u my-api
 - systemctl restart my-api
 
 

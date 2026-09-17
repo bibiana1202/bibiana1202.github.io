@@ -27,7 +27,7 @@ draft: false
 
 ---
 ### DICOM
-- Digital Imaging and Communications in Medicne
+- Digital Imaging and Communications in Medicine
 - 의료영상을 저장하고 주고받기 위한 표준
 ```
 영상 데이터
@@ -79,7 +79,7 @@ Instance
 	└─ Series 4: reconstruction
 	```
 - Instance : Series 안의 개별 DICOM 객체
-	- CT에서는 보통 각 slice image가 하나의 instance
+	- 전통적인 single-frame CT에서는 보통 각 slice image가 하나의 instance이다. 다만 multi-frame DICOM에서는 하나의 instance에 여러 frame을 담을 수 있으므로, instance와 slice가 항상 1:1인 것은 아니다.
 	```
 	Series
 	├─ Instance 1
@@ -294,3 +294,6 @@ PostgreSQL / MongoDB
 ```
 
 > **“CT 장비에서 촬영하면 DICOM 형태의 영상과 metadata가 생성되고, 일반적으로 PACS 같은 시스템에 저장됩니다. 의료영상 AI 플랫폼에서는 해당 영상을 수집해 Study/Series/Instance 등의 정보를 식별하고 분석 job을 생성한 뒤, Worker나 AI 분석 시스템에서 비동기로 분석하고 결과와 상태를 저장해서 의료진이 확인할 수 있도록 제공하는 흐름으로 이해하고 있습니다.”**
+
+### 참고 자료
+- [DICOM Multi-frame Module](https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.6.6.html)

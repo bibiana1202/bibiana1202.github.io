@@ -31,7 +31,6 @@ draft: false
 - 동기 JavaScript 코드는 메인 스레드에서 순차적으로 실행
 - DB / Network / File 같은 I/O는 비동기적으로 처리 가능
 - I/O를 기다리는 동안 Event Loop는 다른 작업을 처리할 수 있음
-- 그럼 java는 ? Java SpringBoot
 
 ### Promise
 
@@ -296,7 +295,7 @@ Timer callback → 기다림
 
 ### 마무리
 > Node.js는 single-thread인데 어떻게 여러 요청을 동시에 처리하나요?
-> : Node.js는 JavaScript 코드를 기본적으로 하나의 메인 스레드에서 실행합니다. 하지만 DB나 네트워크 같은 I/O 작업은 메인 스레드가 직접 기다리지 않고 OS의 비동기 I/O기능을 활용합니다. I/O를 기다리는 동안 메인 스레드는 다른 요청을 처리할 수 있고, 작업이 완료되면 Event Loop를 후속 JavaScript 작업이 실행됩니다. 그래서 하나의 JavaScript 메인 스레드로도 많은 I/O 요청을 효율적으로 처리할 수 있습니다.
+> : Node.js는 JavaScript 코드를 기본적으로 하나의 메인 스레드에서 실행합니다. 하지만 DB나 네트워크 같은 I/O 작업은 메인 스레드가 직접 기다리지 않고 OS의 비동기 I/O기능을 활용합니다. I/O를 기다리는 동안 메인 스레드는 다른 요청을 처리할 수 있고, 작업이 완료되면 Event Loop를 통해 후속 JavaScript 작업이 실행됩니다. 그래서 하나의 JavaScript 메인 스레드로도 많은 I/O 요청을 효율적으로 처리할 수 있습니다.
 
 > async/await은 어떻게 동작하나요?
 > : async 함수는 Promise를 반환하고, await을 만나면 해당 Promise가 완료될때 까지 그 async 함수의 후속 실행을 잠시 중단합니다. 하지만 메인 스레드 전체를 Blocking하는 것은 아니어서 그동안 Event Loop가 다른 작업을 처리할 수 있습니다. Promise가 완료되면 이후 코드가 다시 실행됩니다.
