@@ -1,5 +1,5 @@
 ---
-title: "Index"
+title: "anna.dev"
 date: 2026-09-14
 tags: ["portfolio", "backend", "healthcare-it", "fintech"]
 draft: false
