@@ -1,6 +1,6 @@
 ---
 title: "Kookmin Wallet 멀티체인 RPC 운영기: Provider 구성과 Rate Limit 설계"
-date: 2026-09-18
+date: "2026-09-18T14:10:27+09:00"
 tags: [backend, blockchain, wallet, rpc, rate-limit, redis]
 draft: false
 ---

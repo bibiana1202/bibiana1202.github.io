@@ -1,6 +1,6 @@
 ---
 title: "Go"
-date: 2026-09-17
+date: "2026-09-17T13:36:36+09:00"
 tags: ["backend", "go", "goroutine", "channel", "concurrency"]
 draft: false
 ---

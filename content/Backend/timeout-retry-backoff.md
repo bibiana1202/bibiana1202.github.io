@@ -1,6 +1,6 @@
 ---
 title: "Timeout / Retry / Backoff"
-date: 2026-09-16
+date: "2026-09-16T17:45:57+09:00"
 tags: ["backend", "timeout", "retry", "backoff", "jitter", "circuit-breaker"]
 draft: false
 ---

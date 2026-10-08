@@ -1,6 +1,6 @@
 ---
 title: "DICOM / PACS"
-date: 2026-09-17
+date: "2026-09-17T13:36:39+09:00"
 tags: ["healthcare-it", "dicom", "pacs", "medical-imaging"]
 draft: false
 ---

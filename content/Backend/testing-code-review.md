@@ -1,6 +1,6 @@
 ---
 title: "테스트 코드"
-date: 2026-09-17
+date: "2026-09-17T13:36:38+09:00"
 tags: ["backend", "testing", "unit-test", "integration-test", "code-review"]
 draft: false
 ---

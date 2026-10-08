@@ -1,6 +1,6 @@
 ---
 title: "API와 Worker"
-date: 2026-09-16
+date: "2026-09-16T17:45:56+09:00"
 tags: ["backend", "api", "worker", "queue", "idempotency"]
 draft: false
 ---

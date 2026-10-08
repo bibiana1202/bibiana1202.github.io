@@ -1,6 +1,6 @@
 ---
 title: Node.js 동작 원리
-date: 2026-09-16
+date: "2026-09-16T16:24:12+09:00"
 tags: ["backend", "nodejs", "event-loop", "asynchronous", "promise"]
 draft: false
 ---

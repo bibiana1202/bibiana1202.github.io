@@ -1,6 +1,6 @@
 ---
 title: Transaction
-date: 2026-09-16
+date: "2026-09-16T16:24:16+09:00"
 tags: ["database", "transaction", "acid", "locking", "isolation", "deadlock"]
 draft: false
 ---

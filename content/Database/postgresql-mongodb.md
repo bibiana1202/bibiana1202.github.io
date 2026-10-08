@@ -1,6 +1,6 @@
 ---
 title: "PostgreSQL / MongoDB"
-date: 2026-09-16
+date: "2026-09-16T09:00:00+09:00"
 tags: ["database", "postgresql", "mongodb", "data-modeling", "transaction"]
 draft: false
 ---

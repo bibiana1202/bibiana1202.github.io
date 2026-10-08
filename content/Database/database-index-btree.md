@@ -1,6 +1,6 @@
 ---
 title: Index
-date: 2026-09-16
+date: "2026-09-16T16:24:15+09:00"
 tags: ["database", "index", "btree", "sql", "query-optimization"]
 draft: false
 ---

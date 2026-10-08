@@ -1,6 +1,6 @@
 ---
 title: "Linux"
-date: 2026-09-17
+date: "2026-09-17T13:36:40+09:00"
 tags: ["infrastructure", "linux", "aws", "nginx", "systemd", "monitoring"]
 draft: false
 ---

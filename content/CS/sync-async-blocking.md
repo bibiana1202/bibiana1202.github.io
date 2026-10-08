@@ -1,6 +1,6 @@
 ---
 title: 동기,비동기 & Blocking,Non-blocking
-date: 2026-09-16
+date: "2026-09-16T16:24:14+09:00"
 tags: ["cs", "synchronous", "asynchronous", "blocking", "non-blocking", "io"]
 draft: false
 ---
