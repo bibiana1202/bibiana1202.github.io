@@ -24,7 +24,7 @@ export function validateMarkdown(text,name){
  const allowed=new Set(['title','date','tags','draft','description','featured'])
  if(Object.keys(f).some(k=>!allowed.has(k)))throw Error(`${name}: 비공개 또는 미허용 frontmatter 속성`)
  if(typeof f.title!=='string'||!f.title.trim()||f.draft!==false||!Array.isArray(f.tags)||f.tags.some(t=>typeof t!=='string'))throw Error(`${name}: frontmatter 형식 오류`)
- if(!(f.date instanceof Date)&&!(typeof f.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(f.date)))throw Error(`${name}: 날짜 필요`)
+ if(!((f.date instanceof Date&&!Number.isNaN(f.date.getTime()))||(typeof f.date==='string'&&/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2}))?$/.test(f.date)&&!Number.isNaN(Date.parse(f.date)))))throw Error(`${name}: 날짜 필요`)
  if(/(?:\/Users\/|file:\/\/|(?:00_Drafts|90_Index|\.obsidian)\/|BEGIN.*PRIVATE KEY|sk-[A-Za-z0-9_-]{20,})/.test(text))throw Error(`${name}: 비공개 경로 또는 비밀값 의심 문자열`)
  const tree=unified().use(remarkParse).parse(parsed.content),refs=[]
  function walk(n){
@@ -36,13 +36,13 @@ export function validateMarkdown(text,name){
  walk(tree)
  return refs
 }
-export function prepare(sourceRoot,approvalOverride){
+export function prepare(sourceRoot,approvalOverride,contentOverrides=new Map()){
  const source=path.resolve(sourceRoot),published=path.join(source,'10_Published'),assets=path.join(source,'assets/public')
  const approvals=approvalOverride??JSON.parse(fs.readFileSync(path.join(source,'90_Index/공개승인.json'),'utf8'))
  const files=new Map(),imageFiles=new Map()
  for(const [name,expected] of Object.entries(approvals.files)){
   if(!name.endsWith('.md'))throw Error('승인 Markdown만 허용')
-  const p=safeFile(published,name),data=fs.readFileSync(p)
+  const p=safeFile(published,name),data=contentOverrides.get(name)??fs.readFileSync(p)
   if(hash(data)!==expected)throw Error(`${name}: 승인 후 내용 변경 — 재검토 필요`)
   files.set(name,data.toString())
  }

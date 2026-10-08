@@ -30,19 +30,31 @@ function sorted(object) {
   )
 }
 
-export function buildApproval(sourceRoot, relativeFiles, currentApproval) {
+export function buildApproval(sourceRoot, relativeFiles, currentApproval, { stampNew = false, now = new Date() } = {}) {
   const source = path.resolve(sourceRoot)
   const published = path.join(source, "10_Published")
   const publicAssets = path.join(source, "assets", "public")
   const files = { ...currentApproval.files }
   const assets = { ...currentApproval.assets }
+  const sourceUpdates = new Map()
   const selectedFiles = {}
   const selectedAssets = {}
 
   for (const name of [...new Set(relativeFiles)]) {
     if (!name.endsWith(".md")) throw new Error(`Markdown 파일만 승인할 수 있습니다: ${name}`)
     const filePath = safeFile(published, name)
-    const body = fs.readFileSync(filePath)
+    let body = fs.readFileSync(filePath)
+    const existingDate = matter(body.toString()).data.date
+    const explicitTimestamp = typeof existingDate === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/.test(existingDate) && !Number.isNaN(Date.parse(existingDate))
+    if (stampNew && !Object.hasOwn(currentApproval.files, name) && !explicitTimestamp) {
+      const timestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().replace("Z", "+09:00")
+      const text = body.toString()
+      const header = text.match(/^---\r?\n[\s\S]*?\r?\n---/)
+      if (!header || !/^date:.*$/m.test(header[0])) throw new Error(`${name}: date 필드가 필요합니다`)
+      const updatedHeader = header[0].replace(/^date:.*$/m, `date: "${timestamp}"`)
+      body = Buffer.from(updatedHeader + text.slice(header[0].length))
+      sourceUpdates.set(name, body)
+    }
     const markdown = body.toString()
     validateMarkdown(markdown, name)
     selectedFiles[name] = hash(body)
@@ -73,8 +85,8 @@ export function buildApproval(sourceRoot, relativeFiles, currentApproval) {
     files: sorted(files),
     assets: sorted(assets),
   }
-  prepare(source, next)
-  return { next, selectedFiles: sorted(selectedFiles), selectedAssets: sorted(selectedAssets) }
+  prepare(source, next, sourceUpdates)
+  return { next, selectedFiles: sorted(selectedFiles), selectedAssets: sorted(selectedAssets), sourceUpdates }
 }
 
 function main() {
@@ -96,7 +108,7 @@ function main() {
   const indexRoot = path.join(sourceRoot, "90_Index")
   const approvalPath = safeFile(indexRoot, "공개승인.json")
   const current = JSON.parse(fs.readFileSync(approvalPath, "utf8"))
-  const result = buildApproval(sourceRoot, values.file, current)
+  const result = buildApproval(sourceRoot, values.file, current, { stampNew: true })
 
   console.log(
     JSON.stringify(
@@ -104,6 +116,7 @@ function main() {
         mode: values.apply ? "apply" : "preview",
         files: result.selectedFiles,
         assets: result.selectedAssets,
+        registrationTimes: Object.fromEntries([...result.sourceUpdates].map(([name, body]) => [name, matter(body.toString()).data.date])),
       },
       null,
       2,
@@ -116,9 +129,18 @@ function main() {
   }
 
   const temporary = `${approvalPath}.tmp-${process.pid}`
+  const originals = new Map()
   try {
+    for (const [name, body] of result.sourceUpdates) {
+      const target = safeFile(path.join(sourceRoot, "10_Published"), name)
+      originals.set(target, fs.readFileSync(target))
+      fs.writeFileSync(target, body)
+    }
     fs.writeFileSync(temporary, `${JSON.stringify(result.next, null, 2)}\n`, { flag: "wx" })
     fs.renameSync(temporary, approvalPath)
+  } catch (error) {
+    for (const [target, body] of originals) fs.writeFileSync(target, body)
+    throw error
   } finally {
     fs.rmSync(temporary, { force: true })
   }

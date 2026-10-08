@@ -20,6 +20,7 @@ export function getDate(cfg: GlobalConfiguration, data: QuartzPluginData): Date 
 
 export function formatDate(d: Date, locale: ValidLocale = "en-US"): string {
   return d.toLocaleDateString(locale, {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "short",
     day: "2-digit",

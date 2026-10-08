@@ -25,6 +25,14 @@ const explorerSort = (a: FileTrieNode, b: FileTrieNode) => {
     }
   }
 
+  if (!a.isFolder && !b.isFolder) {
+    const aTime = a.data?.date ? new Date(a.data.date).getTime() : NaN
+    const bTime = b.data?.date ? new Date(b.data.date).getTime() : NaN
+    if (Number.isFinite(aTime) && Number.isFinite(bTime) && aTime !== bTime) return bTime - aTime
+    if (Number.isFinite(aTime) && !Number.isFinite(bTime)) return -1
+    if (!Number.isFinite(aTime) && Number.isFinite(bTime)) return 1
+  }
+
   return a.displayName.localeCompare(b.displayName, undefined, {
     numeric: true,
     sensitivity: "base",

@@ -47,3 +47,36 @@ test("rejects paths outside 10_Published", () => {
     fs.rmSync(root, { recursive: true, force: true })
   }
 })
+
+test("new registration gets Korean timestamp without mutating preview; reapproval preserves it", () => {
+  const { root, approval } = fixture()
+  try {
+    const target = path.join(root, "10_Published", "post.md")
+    const original = markdown("Post")
+    fs.writeFileSync(target, original)
+    const result = buildApproval(root, ["post.md"], approval, {
+      stampNew: true, now: new Date("2026-10-08T23:30:00Z"),
+    })
+    assert.equal(fs.readFileSync(target, "utf8"), original)
+    const stamped = result.sourceUpdates.get("post.md")
+    assert.match(stamped.toString(), /date: "2026-10-09T08:30:00.000\+09:00"/)
+    assert.equal(result.next.files["post.md"], digest(stamped))
+    fs.writeFileSync(target, stamped)
+    const again = buildApproval(root, ["post.md", "index.md"], result.next, {
+      stampNew: true, now: new Date("2026-11-01T00:00:00Z"),
+    })
+    assert.equal(again.sourceUpdates.size, 0)
+    assert.equal(again.next.files["post.md"], result.next.files["post.md"])
+  } finally { fs.rmSync(root, { recursive: true, force: true }) }
+})
+
+test("preserves an explicitly assigned registration timestamp on first approval", () => {
+  const { root, approval } = fixture()
+  try {
+    const body = markdown("Post").replace('date: 2026-09-14', 'date: "2026-10-08T10:30:00+09:00"')
+    fs.writeFileSync(path.join(root, "10_Published", "post.md"), body)
+    const result = buildApproval(root, ["post.md"], approval, { stampNew: true, now: new Date("2026-10-09T00:00:00Z") })
+    assert.equal(result.sourceUpdates.size, 0)
+    assert.equal(result.next.files["post.md"], digest(body))
+  } finally { fs.rmSync(root, { recursive: true, force: true }) }
+})
